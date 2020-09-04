@@ -19,7 +19,7 @@ namespace ConsoleAppSolution
             _area2 = (double)Math.Pow(diam2 / 1000, 2) / 4 * Math.PI;
             _length = length;
         }
-        private double _diam1 = 0, _diam2 = 0, _length = 0, _area1 = 0, _area2 = 0;  
+        private double _diam1, _diam2, _length, _area1, _area2;  
         
         public double tube_diameter_in()
         {
@@ -54,7 +54,37 @@ namespace ConsoleAppSolution
         }
         private int _input_section, _output_section;
 
-        public
+        public void InTmdParameters(double TotalPressureIn = 0,  double TotalTemperatureIn = 0)
+        {
+            _totpres1 = TotalPressureIn;
+            //_totpres2 = TotalPressureOut;
+            _tottemp1 = TotalTemperatureIn;
+            //_tottemp2 = TotalTemperature;
+        }
+
+        public void OutTmdParameters(double TotalPressureOut = 0, double TotalTemperatureOut = 0)
+        {
+            _totpres2 = TotalPressureOut;
+            _tottemp2 = TotalTemperatureOut;
+        }
+        private double _totpres1, _tottemp1, _totpres2, _tottemp2;
+
+        public double TotalPressureIn()
+        {
+            return _totpres1;
+        }
+        public double TotalPressureOut()
+        {
+            return _totpres2;
+        }
+        public double TotalTemperatureIn()
+        {
+            return _tottemp1;
+        }
+        public double TotalTemperatureOut()
+        {
+            return _tottemp2;
+        }
 
     }
 
@@ -82,17 +112,18 @@ namespace ConsoleAppSolution
             //***
             Console.WriteLine("\n***\n");
 
+            double[] SectionIn = new double[NumSectionIn];
+            double[] SectionOut = new double[NumSectionOut];
+
             if (NumSectionIn + NumSectionOut < NumSection)
             {
-                Console.WriteLine("Введите номера входных сечений");
-                double[] SectionIn = new double[NumSectionIn];
+                Console.WriteLine("Введите номера входных сечений");                
                 for (int i = 0; i < NumSectionIn; i++)
                 {
                     SectionIn[i] = Convert.ToInt32(Console.ReadLine());
                 }
 
-                Console.WriteLine("Введите номера выходных сечений");
-                double[] SectionOut = new double[NumSectionOut];
+                Console.WriteLine("Введите номера выходных сечений");                
                 for (int i = 0; i < NumSectionOut; i++)
                 {
                     SectionOut[i] = Convert.ToInt32(Console.ReadLine());
@@ -124,7 +155,7 @@ namespace ConsoleAppSolution
             //Console.WriteLine("\n***\n");
 
             Console.WriteLine("Заполните диаметры и длину канала");
-            for (int i = 0; i<NumChannel; i++)
+            for (int i = 0; i < NumChannel; i++)
             {
                 Console.WriteLine("Введите диаметр на входе в канал №" + (i + 1));
                 double diameter_in = Convert.ToInt32(Console.ReadLine());
@@ -135,6 +166,71 @@ namespace ConsoleAppSolution
                 channels[i].GeomParameters(diameter_in, diameter_out, length_channel);
                 //***
                 Console.WriteLine("\n***\n");
+            }
+
+            Console.WriteLine("Введите термогазодинамические параметры для входных сечений");
+            for (int i = 0; i < NumSectionIn; i++)
+            {
+                for (int j = 0; j < NumChannel; j++)
+                {
+                    if (SectionIn[i] == channels[j].input_section)
+                    {
+                        Console.WriteLine("Введите полное давление для " + SectionIn[i] + " сечения" );
+                        double total_pressure_in = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("Введите полную температуру для " + SectionIn[i] + " сечения");
+                        double total_temper_in = Convert.ToInt32(Console.ReadLine());
+                        channels[j].InTmdParameters(total_pressure_in, total_temper_in);
+                    }
+                }
+            }
+
+            //***
+            Console.WriteLine("\n***\n");
+
+            //Console.WriteLine("Check " + channels[0].TotalTemperatureOut());
+
+            Console.WriteLine("Введите термогазодинамические параметры для выходных сечений");
+            for (int i = 0; i < NumSectionOut; i++)
+            {
+                for (int j = 0; j < NumChannel; j++)
+                {
+                    if (SectionOut[i] == channels[j].output_section)
+                    {
+                        Console.WriteLine("Введите полное давление для " + SectionOut[i] + " сечения");
+                        double tot_pressure_out = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("Введите полную температуру для " + SectionOut[i] + " сечения");
+                        double tot_temper_out = Convert.ToInt32(Console.ReadLine());
+                        channels[j].OutTmdParameters(tot_pressure_out, tot_temper_out);
+                    }
+                }
+            }
+
+            //***
+            Console.WriteLine("\n***\n");
+
+            for (int i = 0; i < NumChannel; i++)
+            {
+                if (channels[i].TotalPressureOut() == 0 && channels[i].TotalPressureIn() != 0)
+                {
+                    double tot_pressure = channels[i].TotalPressureIn();                   
+                    double tot_temper = channels[i].TotalTemperatureIn();
+                    channels[i].OutTmdParameters(tot_pressure, tot_temper);
+                }
+                else if (channels[i].TotalPressureOut()!=0 && channels[i].TotalPressureIn() == 0)
+                {
+                    double tot_pressure = channels[i].TotalPressureOut();
+                    double tot_temper = channels[i].TotalTemperatureOut();
+                    channels[i].InTmdParameters(tot_pressure, tot_temper);
+                }
+                else if (channels[i].TotalPressureOut() == 0 && channels[i].TotalPressureIn() == 0) //Необходимо будет проверить на более сложных моделях, скорее всего нужно будет ввести ряд дополнительных ограничений
+                {
+                    double tot_pressure = channels[i - 1].TotalPressureIn();
+                    double tot_temper = channels[i - 1].TotalTemperatureIn();
+                    channels[i].InTmdParameters(tot_pressure, tot_temper);
+                    channels[i].OutTmdParameters(tot_pressure, tot_temper);
+                    //else if 
+                }
+
             }
 
         }
