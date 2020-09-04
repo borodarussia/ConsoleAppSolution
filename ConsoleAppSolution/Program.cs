@@ -8,33 +8,35 @@ namespace ConsoleAppSolution
 {
     class TubeChannel
     {
-        private double _diam1, _diam2, _length;
+
+
+
+        public void Parameters(double diam1, double diam2, double length)
+        {
+            _diam1 = diam1;
+            _diam2 = diam2;
+            _area1 = (double)Math.Pow(diam1 / 1000, 2) / 4 * Math.PI;
+            _area2 = (double)Math.Pow(diam2 / 1000, 2) / 4 * Math.PI;
+        }
+
+        private double _diam1, _diam2, _length, _area1, _area2;
         private int _input_node, _output_node;
 
-        public double tube_diameter_1
+        public double tube_diameter_in()
         {
-            get => _diam1;
-            set => _diam1 = value;
+            return _diam1;
         }
-        public double tube_diameter_2
+        public double tube_diameter_out()
         {
-            get => _diam2;
-            set => _diam2 = value;
+            return _diam2;
         }
-        public double tube_length
+        public double tube_area_in()
         {
-            get => _length;
-            set => _length = value;
+            return _area1;
         }
-        public int channel_input_node
+        public double tube_area_out()
         {
-            get => _input_node;
-            set => _input_node = value;
-        }
-        public int channel_outpute_node
-        {
-            get => _output_node;
-            set => _output_node = value;
+            return _area2;
         }
 
 
@@ -45,13 +47,9 @@ namespace ConsoleAppSolution
         static void Main(string[] args)
         {
             TubeChannel channel1 = new TubeChannel();
+            channel1.Parameters(500,500,400);
 
-            channel1.tube_diameter_1 = 500;
-            channel1.tube_diameter_2 = 500;
-            channel1.tube_length = 200;
-
-            Console.WriteLine("Check, " + channel1.tube_square_1);
-
+            Console.WriteLine(channel1.tube_area_in());
 
         }
     }
