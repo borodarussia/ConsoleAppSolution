@@ -41,7 +41,6 @@ namespace ConsoleAppSolution
         {
             return _length;
         }
-
         public int input_section
         {
             get => _input_section;
@@ -53,22 +52,17 @@ namespace ConsoleAppSolution
             set => _output_section = value;
         }
         private int _input_section, _output_section;
-
         public void InTmdParameters(double TotalPressureIn = 0,  double TotalTemperatureIn = 0)
         {
             _totpres1 = TotalPressureIn;
-            //_totpres2 = TotalPressureOut;
             _tottemp1 = TotalTemperatureIn;
-            //_tottemp2 = TotalTemperature;
         }
-
         public void OutTmdParameters(double TotalPressureOut = 0, double TotalTemperatureOut = 0)
         {
             _totpres2 = TotalPressureOut;
             _tottemp2 = TotalTemperatureOut;
         }
         private double _totpres1, _tottemp1, _totpres2, _tottemp2;
-
         public double TotalPressureIn()
         {
             return _totpres1;
@@ -85,6 +79,12 @@ namespace ConsoleAppSolution
         {
             return _tottemp2;
         }
+        public double Ksi12_first() //Первичное значение кси
+        {
+            _ksi12 = 0.98;
+            return _ksi12;
+        }
+        private double _ksi12;
 
     }
 
@@ -210,29 +210,61 @@ namespace ConsoleAppSolution
 
             for (int i = 0; i < NumChannel; i++)
             {
-                if (channels[i].TotalPressureOut() == 0 && channels[i].TotalPressureIn() != 0)
+                if (channels[i].TotalPressureOut() == 0)
                 {
-                    double tot_pressure = channels[i].TotalPressureIn();                   
-                    double tot_temper = channels[i].TotalTemperatureIn();
+                    double tot_pressure = channels[0].TotalPressureIn();                   
+                    double tot_temper = channels[0].TotalTemperatureIn();
                     channels[i].OutTmdParameters(tot_pressure, tot_temper);
                 }
-                else if (channels[i].TotalPressureOut()!=0 && channels[i].TotalPressureIn() == 0)
+                else if (channels[i].TotalPressureIn() == 0)
                 {
-                    double tot_pressure = channels[i].TotalPressureOut();
-                    double tot_temper = channels[i].TotalTemperatureOut();
+                    double tot_pressure = channels[0].TotalPressureIn();
+                    double tot_temper = channels[0].TotalTemperatureIn();
                     channels[i].InTmdParameters(tot_pressure, tot_temper);
                 }
-                else if (channels[i].TotalPressureOut() == 0 && channels[i].TotalPressureIn() == 0) //Необходимо будет проверить на более сложных моделях, скорее всего нужно будет ввести ряд дополнительных ограничений
+                /*else if (channels[i].TotalPressureOut() == 0 && channels[i].TotalPressureIn() == 0) //Необходимо будет проверить на более сложных моделях, скорее всего нужно будет ввести ряд дополнительных ограничений
                 {
                     double tot_pressure = channels[i - 1].TotalPressureIn();
                     double tot_temper = channels[i - 1].TotalTemperatureIn();
                     channels[i].InTmdParameters(tot_pressure, tot_temper);
                     channels[i].OutTmdParameters(tot_pressure, tot_temper);
-                    //else if 
-                }
-
+                }*/
             }
 
+            /*for (int i = 0; i < NumChannel; i++)
+            {
+                if (i+1 < NumChannel)
+                {
+                    for (int j = i + 1; j < NumChannel; j++)
+                    {
+                        if (channels[i].output_section == channels[j].output_section)
+                        {
+                            channels[j].OutTmdParameters(channels[i].TotalPressureOut(), channels[i].TotalTemperatureOut());
+                        }
+                    }
+                }
+            }*/
+
+            for (int i = 0; i < NumChannel; i++)
+            {
+                for (int j = 0; j < NumChannel; j ++)
+                {
+                    if (channels[i].output_section == channels[j].output_section && i != j)
+                    {
+                        channels[j].OutTmdParameters(channels[i].TotalPressureOut(), channels[i].TotalTemperatureOut());
+                    }
+                    else if (channels[i].output_section == channels[j].input_section)
+                    {
+                        channels[j].InTmdParameters(channels[i].TotalPressureOut(), channels[i].TotalTemperatureOut());
+                    }
+                }
+            }
+
+            for (int i = 0; i < NumChannel; i++)
+            {
+                Console.WriteLine("Канал №" + (i + 1));
+                Console.WriteLine(channels[i].input_section + ":\t" + channels[i].TotalPressureIn() + "\t" + channels[i].TotalTemperatureIn() + "\n" + channels[i].output_section +  ":\t" + channels[i].TotalPressureOut() + "\t" + channels[i].TotalTemperatureOut());
+            }
         }
     }
 }
