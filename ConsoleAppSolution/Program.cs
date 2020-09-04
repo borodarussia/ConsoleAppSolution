@@ -46,10 +46,34 @@ namespace ConsoleAppSolution
     {
         static void Main(string[] args)
         {
-            TubeChannel channel1 = new TubeChannel();
-            channel1.Parameters(500,500,400);
+            Console.WriteLine("Введите количество каналов");
+            int NumChannel = Convert.ToInt32(Console.ReadLine());
+            int NumSection = NumChannel + 1;
+            Console.WriteLine("Введите количество входных сечений");
+            int NumSectionIn = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine("Введите количество выходных сечений");
+            int NumSectionOut = Convert.ToInt32(Console.ReadLine());
+            if (NumSectionIn + NumSectionOut < NumSection)
+            {
+                Console.WriteLine("Введите номера входных узлов");
+                double[] SectionIn = new double[NumSectionIn];
+                for (int i = 0; i < NumSectionIn; i++)
+                {
+                    SectionIn[i] = Convert.ToInt32(Console.ReadLine());
+                }
 
-            Console.WriteLine(channel1.tube_area_in());
+                Console.WriteLine("Введите номера выходных узлов");
+                double[] SectionOut = new double[NumSectionOut];
+                for (int i = 0; i < NumSectionOut; i++)
+                {
+                    SectionOut[i] = Convert.ToInt32(Console.ReadLine());
+                }
+            }
+            else
+            {
+                Console.WriteLine("Заданное количество входных и выходных сечений больше или равно общему количеству полученных сечений");
+            }
+            
 
         }
     }
