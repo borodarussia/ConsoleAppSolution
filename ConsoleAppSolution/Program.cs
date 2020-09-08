@@ -289,85 +289,12 @@ namespace ConsoleAppSolution
 
             for (int i = 0; i < NumSection; i++)
             {
-                MassFlowNumerator = 1;
-                MassFlowDenominator = 1;
-                delta = 1;
-                iter = 0;
-                if (SumSection[1, i] > 1)
-                {
-                    for (int k = 0; k < 4; k++)
-                    {
-                        while (Math.Abs(delta) > epsilon[k] && MassFlowNumerator != 0)
-                        {
-                            iter += 1;
-                            if (delta < 0)
-                            {
-                                for (int j = 0; j < NumChannel; j++)
-                                {
-                                    if (SumSection[0, i] == channels[j].output_section)
-                                    {
-                                        p_out = channels[j].TotalPressureOut() - epsilon[k] * 1000;
-                                        p_in = channels[j].TotalPressureIn();
-                                        t_mid = channels[j].TotaTemperatureMid();
-                                        ksi_mid = channels[j].Ksi12_first();
-                                        a_mid = channels[j].area_mid();
-                                        channels[j].OutTmdParameters(p_out, channels[j].TotalTemperatureOut());
-                                        MassFlowNumerator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        MassFlowDenominator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        //Console.WriteLine("Iter " + iter + ": " + GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid));
-                                    }
-                                    else if (SumSection[0, i] == channels[j].input_section)
-                                    {
-                                        p_in = channels[j].TotalPressureIn() - epsilon[k] * 1000;
-                                        p_out = channels[j].TotalPressureOut();
-                                        t_mid = channels[j].TotaTemperatureMid();
-                                        ksi_mid = channels[j].Ksi12_first();
-                                        a_mid = channels[j].area_mid();
-                                        channels[j].InTmdParameters(p_in, channels[j].TotalTemperatureIn());
-                                        MassFlowNumerator -= GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        //Console.WriteLine("Iter " + iter + ": " + GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid));
-                                    }
-                                }
-                            }
-                            else if (delta > 0)
-                            {
-                                for (int j = 0; j < NumChannel; j++)
-                                {
-                                    if (SumSection[0, i] == channels[j].output_section)
-                                    {
-                                        p_out = channels[j].TotalPressureOut() + epsilon[k] * 1000;
-                                        p_in = channels[j].TotalPressureIn();
-                                        t_mid = channels[j].TotaTemperatureMid();
-                                        ksi_mid = channels[j].Ksi12_first();
-                                        a_mid = channels[j].area_mid();
-                                        channels[j].OutTmdParameters(p_out, channels[j].TotalTemperatureOut());
-                                        MassFlowNumerator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        MassFlowDenominator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        //Console.WriteLine("Iter " + iter + ": " + GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid));
-                                    }
-                                    else if (SumSection[0, i] == channels[j].input_section)
-                                    {
-                                        p_in = channels[j].TotalPressureIn() + epsilon[k] * 1000;
-                                        p_out = channels[j].TotalPressureOut();
-                                        t_mid = channels[j].TotaTemperatureMid();
-                                        ksi_mid = channels[j].Ksi12_first();
-                                        a_mid = channels[j].area_mid();
-                                        channels[j].InTmdParameters(p_in, channels[j].TotalTemperatureIn());
-                                        MassFlowNumerator -= GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                        //Console.WriteLine("Iter " + iter + ": " + GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid));
-                                    }
-                                }
-                            }
-                            delta = MassFlowNumerator / MassFlowDenominator;
-                            //Console.WriteLine("Iter " + iter + ": " + MassFlowNumerator + "\t" + MassFlowDenominator + "\t" + delta);
-                        }
-                        //Console.WriteLine("Global Iter Epsilon: " + (k + 1));
-                        //Console.ReadLine();
-                        //iter = 0;
-                    }
-                    
-                }
+
             }
+
+
+
+            
             for (int i = 0; i < NumChannel; i++)
             {
                 Console.WriteLine("Канал №" + (i + 1));
