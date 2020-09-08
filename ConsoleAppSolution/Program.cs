@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Globalization;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace ConsoleAppSolution
 {
@@ -90,9 +91,12 @@ namespace ConsoleAppSolution
         {
             return _tottemp2;
         }
-        public double Ksi12_first() //Первичное значение кси
+        public void GetKsi12(double ksi12 = 0.98) //Первичное значение кси
         {
-            _ksi12 = 0.98;
+            _ksi12 = ksi12;
+        }
+        public double Ksi12()
+        {
             return _ksi12;
         }
         private double _ksi12;
@@ -138,7 +142,7 @@ namespace ConsoleAppSolution
             double[] SectionIn = new double[NumSectionIn];
             double[] SectionOut = new double[NumSectionOut];
 
-            if (NumSectionIn + NumSectionOut < NumSection)
+            if (NumSectionIn + NumSectionOut <= NumSection)
             {
                 Console.WriteLine("Введите номера входных сечений");                
                 for (int i = 0; i < NumSectionIn; i++)
@@ -181,11 +185,11 @@ namespace ConsoleAppSolution
             for (int i = 0; i < NumChannel; i++)
             {
                 Console.WriteLine("Введите диаметр на входе в канал №" + (i + 1));
-                double diameter_in = Convert.ToInt32(Console.ReadLine());
+                double diameter_in = Convert.ToDouble(Console.ReadLine());
                 Console.WriteLine("Введите диаметр на выходе из канала №" + (i + 1));
-                double diameter_out = Convert.ToInt32(Console.ReadLine());
+                double diameter_out = Convert.ToDouble(Console.ReadLine());
                 Console.WriteLine("Введите длину канала №" + (i + 1));
-                double length_channel = Convert.ToInt32(Console.ReadLine());
+                double length_channel = Convert.ToDouble(Console.ReadLine());
                 channels[i].GeomParameters(diameter_in, diameter_out, length_channel);
                 //***
                 Console.WriteLine("\n***\n");
@@ -220,14 +224,19 @@ namespace ConsoleAppSolution
                     if (SectionOut[i] == channels[j].output_section)
                     {
                         Console.WriteLine("Введите полное давление для " + SectionOut[i] + " сечения");
-                        double tot_pressure_out = Convert.ToInt32(Console.ReadLine());
+                        double tot_pressure_out = Convert.ToDouble(Console.ReadLine());
                         Console.WriteLine("Введите полную температуру для " + SectionOut[i] + " сечения");
-                        double tot_temper_out = Convert.ToInt32(Console.ReadLine());
+                        double tot_temper_out = Convert.ToDouble(Console.ReadLine());
                         channels[j].OutTmdParameters(tot_pressure_out, tot_temper_out);
                     }
                 }
             }
-
+            for (int i = 0; i < NumChannel; i++)
+            {
+                Console.WriteLine("Потери для канала №" + (i + 1));
+                double ksi = Convert.ToDouble(Console.ReadLine());
+                channels[i].GetKsi12(ksi);
+            }
             //***
             Console.WriteLine("\n***\n");
 
@@ -312,14 +321,6 @@ namespace ConsoleAppSolution
                 }
             }
 
-            for (int i = 0; i < NumChannel; i++)
-            {
-                Console.WriteLine("Канал №" + (i + 1));
-                Console.WriteLine(channels[i].input_section + ":\t" + channels[i].TotalPressureIn() + "\t" + channels[i].TotalTemperatureIn() + "\n" + channels[i].output_section +  ":\t" + channels[i].TotalPressureOut() + "\t" + channels[i].TotalTemperatureOut());
-            }
-
-            //Console.WriteLine(GetMassFlow(channels[0].TotalPressureIn(), channels[0].TotalPressureOut(), channels[0].area_mid(), channels[0].Ksi12_first(), channels[0].TotaTemperatureMid(), 287) + "\t" + channels[0].MassFlow());
-            //Console.WriteLine(GetMassFlow(channels[1].TotalPressureIn(), channels[1].TotalPressureOut(), channels[1].area_mid(), channels[1].Ksi12_first(), channels[1].TotaTemperatureMid(), 287) + "\t" + channels[1].MassFlow());
             // Вычисление
 
             int SumSect;
@@ -345,14 +346,15 @@ namespace ConsoleAppSolution
 
             double delta;
             double p_out, p_in, t_mid, ksi_mid, a_mid;
-            double p_max, p_min, p_mid, p_max1, p_min1;
+            double p_max, p_min, p_mid;
             double MassFlowNumerator;
-            double MassFlowDenominator;          
+            double iter = 0;
 
-            for (int num_iter = 0; num_iter < 25; num_iter++)
+            for (int num_iter = 0; num_iter < 100; num_iter++)
             {
                 p_max = 0;
                 p_min = 1000000000;
+                
                 for (int i = 0; i < NumSection; i++)
                 {
                     delta = 1000000;
@@ -383,10 +385,9 @@ namespace ConsoleAppSolution
                         p_mid = (p_min + p_max) / 2;
 
 
-                        while (Math.Abs(delta) > 0.001)
+                        while (Math.Abs(delta) > 0.0000001)
                         {
                             MassFlowNumerator = 0;
-                            MassFlowDenominator = 0;
                             for (int j = 0; j < NumChannel; j++)
                             {
                                 if (SumSection[0, i] == channels[j].output_section)
@@ -394,55 +395,58 @@ namespace ConsoleAppSolution
                                     p_out = p_mid;
                                     p_in = channels[j].TotalPressureIn();
                                     t_mid = channels[j].TotaTemperatureMid();
-                                    ksi_mid = channels[j].Ksi12_first();
+                                    ksi_mid = channels[j].Ksi12();
                                     a_mid = channels[j].area_mid();
                                     channels[j].OutTmdParameters(p_out, channels[j].TotalTemperatureOut());
                                     MassFlowNumerator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
-                                    MassFlowDenominator += GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
                                 }
                                 else if (SumSection[0, i] == channels[j].input_section)
                                 {
                                     p_in = p_mid;
                                     p_out = channels[j].TotalPressureOut();
                                     t_mid = channels[j].TotaTemperatureMid();
-                                    ksi_mid = channels[j].Ksi12_first();
+                                    ksi_mid = channels[j].Ksi12();
                                     a_mid = channels[j].area_mid();
                                     channels[j].InTmdParameters(p_in, channels[j].TotalTemperatureIn());
                                     MassFlowNumerator -= GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
                                 }
                             }
-                            delta = MassFlowNumerator / MassFlowDenominator;
-                            if (delta > 0)
+                            if (MassFlowNumerator == delta)
                             {
-                                p_min = p_mid;
-                                p_mid = (p_max + p_min) / 2;
+                                break;
                             }
-                            else if (delta < 0)
+                            else
                             {
-                                p_max = p_mid;
-                                p_mid = (p_max + p_min) / 2;
+                                delta = MassFlowNumerator;
+                                iter += 1;
+                                Console.WriteLine("iter: " + (iter + 1) + "\tdelta: " + delta);
+                                if (delta > 0)
+                                {
+                                    p_min = p_mid;
+                                    p_mid = (p_max + p_min) / 2;
+                                }
+                                else if (delta < 0)
+                                {
+                                    p_max = p_mid;
+                                    p_mid = (p_max + p_min) / 2;
+                                }
                             }
                         }
 
                     }
                 }
-                for (int i = 0; i < NumChannel; i++)
-                {
-                    Console.WriteLine("Канал №" + (i + 1));
-                    Console.WriteLine(channels[i].input_section + ":\t" + channels[i].TotalPressureIn() + "\t" + channels[i].TotalTemperatureIn() + "\n" + channels[i].output_section + ":\t" + channels[i].TotalPressureOut() + "\t" + channels[i].TotalTemperatureOut() + "\n" + channels[i].MassFlow());
-                }
-                Console.ReadLine();
             }
-
-            
-
-
-
 
             for (int i = 0; i < NumChannel; i++)
             {
-                Console.WriteLine("Канал №" + (i + 1));
-                Console.WriteLine(channels[i].input_section + ":\t" + channels[i].TotalPressureIn() + "\t" + channels[i].TotalTemperatureIn() + "\n" + channels[i].output_section + ":\t" + channels[i].TotalPressureOut() + "\t" + channels[i].TotalTemperatureOut() + "\n" + channels[i].MassFlow());
+                Console.WriteLine("Finish Канал №" + (i + 1));
+                p_in = channels[i].TotalPressureIn();
+                p_out = channels[i].TotalPressureOut();
+                t_mid = channels[i].TotaTemperatureMid();
+                ksi_mid = channels[i].Ksi12();
+                a_mid = channels[i].area_mid();
+                double MassFlow = GetMassFlow(p_in, p_out, a_mid, ksi_mid, t_mid);
+                Console.WriteLine(channels[i].input_section + ":\t" + channels[i].TotalPressureIn() + "\t" + channels[i].TotalTemperatureIn() + "\n" + channels[i].output_section + ":\t" + channels[i].TotalPressureOut() + "\t" + channels[i].TotalTemperatureOut() + "\n" + MassFlow);
             }
         }
         static double GetMassFlow(double pressure_in, double pressure_out, double area_mid, double ksi_mid, double temper_mid, double R = 287)
