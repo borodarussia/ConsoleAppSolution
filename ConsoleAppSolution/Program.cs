@@ -112,12 +112,14 @@ namespace ConsoleAppSolution
             if (_totpres1 <= _totpres2)
             {
                 _massflow = Math.Sqrt((Math.Pow(_totpres1, 2) - Math.Pow(_totpres1 - 1000, 2)) * Math.Pow(_area_mid, 2) / (_ksi12 * 287 * _tottemp_mid));
+                _density_mid = _ksi12 * Math.Pow(_massflow, 2) / (2 * Math.Pow(_area_mid, 2) * (_totpres1 - (_totpres1 - 1000)));
             }
             else
             {
                 _massflow = Math.Sqrt((Math.Pow(_totpres1, 2) - Math.Pow(_totpres2, 2)) * Math.Pow(_area_mid, 2) / (_ksi12 * 287 * _tottemp_mid));
+                _density_mid = _ksi12 * Math.Pow(_massflow, 2) / (2 * Math.Pow(_area_mid, 2) * (_totpres1 - _totpres2));
             }
-            _density_mid = _ksi12 * Math.Pow(_massflow, 2) / (2 * Math.Pow(_area_mid, 2) * (_totpres1 - (_totpres1 - 1000)));
+            //_density_mid = _ksi12 * Math.Pow(_massflow, 2) / (2 * Math.Pow(_area_mid, 2) * (_totpres1 - (_totpres1 - 1000)));
             _velocity_mid = _massflow / (_density_mid * _area_mid);
             _lambda_mid = _velocity_mid / Math.Sqrt(2 * 1.4 / (1.4 + 1) * 287 * _tottemp_mid);
             _machnumber_mid = _lambda_mid * (2 / (1.4 + 1)) / (1 - (1.4 - 1) / (1.4 + 1) * Math.Pow(_lambda_mid, 2));
@@ -414,8 +416,8 @@ namespace ConsoleAppSolution
                                     p_out = p_mid;
                                     p_in = channels[j].TotalPressureIn();
                                     t_mid = channels[j].TotaTemperatureMid();
-                                    //ksi_mid = channels[j].Ksi12();
-                                    //a_mid = channels[j].area_mid();
+                                    ksi_mid = channels[j].Ksi12();
+                                    a_mid = channels[j].area_mid();
                                     channels[j].OutTmdParameters(p_out, channels[j].TotalTemperatureOut());
                                     MassFlowNumerator += channels[j].MassFlow();
                                 }
@@ -424,8 +426,8 @@ namespace ConsoleAppSolution
                                     p_in = p_mid;
                                     p_out = channels[j].TotalPressureOut();
                                     t_mid = channels[j].TotaTemperatureMid();
-                                    //ksi_mid = channels[j].Ksi12();
-                                    //a_mid = channels[j].area_mid();
+                                    ksi_mid = channels[j].Ksi12();
+                                    a_mid = channels[j].area_mid();
                                     channels[j].InTmdParameters(p_in, channels[j].TotalTemperatureIn());
                                     MassFlowNumerator -= channels[j].MassFlow();
                                 }
